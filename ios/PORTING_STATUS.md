@@ -17,7 +17,8 @@ The Android port remains the reference implementation. iOS work is isolated on t
 - `.github/workflows/ios-sdl3-smoke.yml`: builds iPhoneOS arm64 and iOS Simulator arm64 targets on a macOS runner, and uploads the unsigned device .app bundle.
 - `ios/CMakeLists.txt`: standalone iOS CMake target linking SDL3 static.
 - `ios/src/main.cpp`: minimal SDL3 app host with a non-zero fullscreen landscape window, a Metal renderer preference, event loop and renderer diagnostic screen.
-- `ios/Info.plist`: app bundle metadata and landscape orientation.
+- `ios/Info.plist`: app bundle metadata, landscape orientation, and Files-app document sharing.
+- `ios/src/game_data.mm` / `.h`: iOS Documents folder preparation and discovery of user-provided `default.xbe` / `.iso` files.
 - `ios/README.md`: current architecture and next tasks.
 - `ios/ANDROID_PORTING_AUDIT.md`: verified Android host/rendering dependencies, reusable SDL input modules and a staged MoltenVK-first iOS plan.
 - `native/input.cpp`: Android JNI-only virtual-controller callbacks are now guarded by `__ANDROID__`; SDL gamepad handling can be compiled on other platforms without `jni.h`.
