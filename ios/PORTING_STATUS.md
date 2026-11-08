@@ -18,7 +18,7 @@ The Android port remains the reference implementation. iOS work is isolated on t
 - `ios/CMakeLists.txt`: standalone iOS CMake target linking SDL3 static.
 - `ios/src/main.cpp`: minimal SDL3 app host with a non-zero fullscreen landscape window, a Metal renderer preference, event loop and renderer diagnostic screen.
 - `ios/Info.plist`: app bundle metadata and landscape orientation.
-- `ios/README.md`: current architecture and next tasks.\n- `ios/ANDROID_PORTING_AUDIT.md`: verified Android host/rendering dependencies and a staged MoltenVK-first iOS plan.
+- `ios/README.md`: current architecture and next tasks.\n- `ios/ANDROID_PORTING_AUDIT.md`: verified Android host/rendering dependencies, reusable SDL input modules and a staged MoltenVK-first iOS plan.\n- `native/input.cpp`: Android JNI-only virtual-controller callbacks are now guarded by `__ANDROID__`; SDL gamepad handling can be compiled on other platforms without `jni.h`.
 
 ## Current milestone
 
@@ -30,9 +30,9 @@ The Android port remains the reference implementation. iOS work is isolated on t
 2. Replace the diagnostic screen with the game's runtime entry point after isolating portable sources from Android host code.
 3. Port the renderer and Dear ImGui backend to Metal, or validate MoltenVK end-to-end on iOS.
 4. Replace Android storage, activity lifecycle, logging and JNI assumptions with iOS equivalents.
-5. Make the XBE recompiler reproducible on macOS, or generate the C++ game sources in a separate Windows job.
-6. Implement private/local import of legally obtained game files; never commit copyrighted disc data to this public repository.
-7. Add signing/provisioning and IPA export after the unsigned app builds and launches.
+5. Build an iOS host adapter and explicitly select shared SDL input modules; Android JNI callbacks are isolated from the cross-platform gamepad implementation.\n6. Make the XBE recompiler reproducible on macOS, or generate the C++ game sources in a separate Windows job.
+7. Implement private/local import of legally obtained game files; never commit copyrighted disc data to this public repository.
+8. Add signing/provisioning and IPA export after the unsigned app builds and launches.
 
 ## Important boundary
 
