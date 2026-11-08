@@ -1,4 +1,4 @@
-name: iOS SDL3 device build smoke test
+name: iOS native host build
 
 on:
   workflow_dispatch:
@@ -12,9 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  sdl3-iphoneos:
+  ios-device-build:
     runs-on: macos-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - name: Check out port repository
         uses: actions/checkout@v4
@@ -32,39 +32,21 @@ jobs:
           xcrun --sdk iphoneos --show-sdk-version
           cmake --version
 
-      - name: Configure SDL3 for physical iPhone/iPad
+      - name: Configure native iOS app
         run: |
-          cmake -S third_party/SDL3 -B build/SDL3-iphoneos -G Xcode \
+          cmake -S ios -B build/ios-device -G Xcode \
+            -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 \
-            -DSDL_SHARED=OFF \
-            -DSDL_STATIC=ON \
-            -DSDL_TESTS=OFF \
-            -DSDL_EXAMPLES=OFF
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
 
-      - name: Build SDL3 for iOS device
-        run: cmake --build build/SDL3-iphoneos --config Release
+      - name: Build unsigned iOS app
+        run: cmake --build build/ios-device --config Release --target ShaolinMonksIOS
 
-      - name: Record smoke-test result
-        if: always()
-        run: |
-          mkdir -p audit
-          {
-            echo "# SDL3 iOS device smoke test"
-            echo
-            echo "- Workflow: $GITHUB_WORKFLOW"
-            echo "- Commit: $GITHUB_SHA"
-            echo "- Runner: $RUNNER_OS / $RUNNER_ARCH"
-            echo "- Target: iOS device, arm64, deployment target iOS 15.0"
-            echo "- Result: see the preceding configure/build steps."
-          } > audit/sdl3-ios-smoke-test.md
-
-      - name: Upload smoke-test report
-        if: always()
+      - name: Upload unsigned app bundle
         uses: actions/upload-artifact@v4
         with:
-          name: sdl3-ios-smoke-test
-          path: audit/sdl3-ios-smoke-test.md
-          if-no-files-found: warn
+          name: ShaolinMonksIOS-unsigned-app
+          path: build/ios-device/Release-iphoneos/ShaolinMonksIOS.app
+          if-no-files-found: error
