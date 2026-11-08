@@ -52,10 +52,13 @@ int main(int, char**) {
 
     SDL_Log("Game data folder: %s", gameFolder.c_str());
     if (!foldersReady) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", folderError.c_str());
-    if (!ios_game_data::ExpectedXbeSha1().empty()) SDL_Log("Expected XBE SHA-1: %s", ios_game_data::ExpectedXbeSha1().c_str());\n    for (const auto& candidate : candidates) {
+    if (!ios_game_data::ExpectedXbeSha1().empty()) SDL_Log("Expected XBE SHA-1: %s", ios_game_data::ExpectedXbeSha1().c_str());
+    for (const auto& candidate : candidates) {
         SDL_Log("Game candidate: %s (%s, %llu bytes)%s%s", candidate.path.c_str(), candidate.type.c_str(),
             static_cast<unsigned long long>(candidate.size), candidate.sha1.empty() ? "" : ", SHA-1 ",
-            candidate.sha1.c_str());\n        if (candidate.type == "ISO") SDL_Log("ISO Xbox filesystem: %s", candidate.containsXbe ? "valid; default.xbe found" : "not recognized or no default.xbe");\n        if (candidate.type == "XBE" || candidate.containsXbe) {\n            if (!candidate.releaseCheckAvailable) SDL_Log("XBE release check unavailable (expected hash not configured or read failed)");\n            else SDL_Log("XBE release match: %s", candidate.releaseMatches ? "YES" : "NO");\n        }
+            candidate.sha1.c_str());
+        if (candidate.type == "ISO") SDL_Log("ISO Xbox filesystem: %s", candidate.containsXbe ? "valid; default.xbe found" : "not recognized or no default.xbe");
+        if (candidate.type == "XBE" || candidate.containsXbe) {\n            if (!candidate.releaseCheckAvailable) SDL_Log("XBE release check unavailable (expected hash not configured or read failed)");\n            else SDL_Log("XBE release match: %s", candidate.releaseMatches ? "YES" : "NO");\n        }
     }
 
     bool running = true;
@@ -89,7 +92,9 @@ int main(int, char**) {
                 DrawLine(renderer, 42.0f, y, candidate.path.c_str());
                 y += 24.0f;
                 std::string detail = candidate.type + " | " + size;
-                if (!candidate.sha1.empty()) detail += " | SHA-1: " + candidate.sha1;\n                if (candidate.type == "ISO") detail += candidate.containsXbe ? " | XBE FOUND" : " | XBOX ISO NOT READ";\n                if (candidate.type == "XBE" || candidate.containsXbe) detail += candidate.releaseCheckAvailable ? (candidate.releaseMatches ? " | RELEASE MATCH" : " | DIFFERENT RELEASE") : " | RELEASE CHECK N/A";
+                if (!candidate.sha1.empty()) detail += " | SHA-1: " + candidate.sha1;
+                if (candidate.type == "ISO") detail += candidate.containsXbe ? " | XBE FOUND" : " | XBOX ISO NOT READ";
+                if (candidate.type == "XBE" || candidate.containsXbe) detail += candidate.releaseCheckAvailable ? (candidate.releaseMatches ? " | RELEASE MATCH" : " | DIFFERENT RELEASE") : " | RELEASE CHECK N/A";
                 SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
                 DrawLine(renderer, 62.0f, y, detail.c_str());
                 y += 32.0f;
