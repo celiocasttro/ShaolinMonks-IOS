@@ -32,9 +32,10 @@ add_subdirectory("${SDL_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/SDL3" EXCLUDE_FROM_ALL
 add_executable(ShaolinMonksIOS MACOSX_BUNDLE
   src/main.cpp
   src/game_data.mm
+  ../sdk/runtime/kernel/disc.cpp
 )
 target_link_libraries(ShaolinMonksIOS PRIVATE SDL3-static "-framework Foundation")
-target_include_directories(ShaolinMonksIOS PRIVATE "${SDL_SOURCE_DIR}/include")
+target_include_directories(ShaolinMonksIOS PRIVATE "${SDL_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../sdk/runtime")
 target_compile_definitions(ShaolinMonksIOS PRIVATE IOS_EXPECTED_XBE_SHA1="${IOS_EXPECTED_XBE_SHA1}")
 
 set_target_properties(ShaolinMonksIOS PROPERTIES
