@@ -10,6 +10,7 @@ struct CandidateInfo {
     std::string type;
     uint64_t size = 0;
     std::string sha1;
+    bool containsXbe = false;
     bool releaseMatches = false;
     bool releaseCheckAvailable = false;
 };
