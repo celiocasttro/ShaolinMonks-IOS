@@ -1,5 +1,4 @@
 name: iOS native host build
-
 on:
   workflow_dispatch:
   push:
@@ -7,16 +6,11 @@ on:
     paths:
       - 'ios/**'
       - '.github/workflows/ios-sdl3-smoke.yml'
-
-# Keep only the newest run for this workflow/branch. This prevents a commit
-# burst from filling the GitHub-hosted macOS runner queue with stale builds.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 permissions:
   contents: read
-
 jobs:
   ios-build:
     runs-on: macos-latest
@@ -24,38 +18,40 @@ jobs:
     steps:
       - name: Check out port repository
         uses: actions/checkout@v4
-
       - name: Check out SDL3
         uses: actions/checkout@v4
         with:
           repository: libsdl-org/SDL
           ref: release-3.4.16
           path: third_party/SDL3
-
       - name: Show Apple toolchain
         run: |
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
-          xcrun --sdk iphonesimulator --show-sdk-version
           cmake --version
-
       - name: Configure iPhone device target
-        run: |
-          cmake -S ios -B build/ios-device -G Xcode -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
-
+        run: cmake -S ios -B build/ios-device -G Xcode -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
       - name: Build unsigned iPhone app
         run: cmake --build build/ios-device --config Release --target ShaolinMonksIOS
-
-      - name: Upload unsigned iPhone app
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p build/ipa/Payload
+          cp -R build/ios-device/Release-iphoneos/ShaolinMonksIOS.app build/ipa/Payload/
+          cd build/ipa
+          /usr/bin/zip -qry "$GITHUB_WORKSPACE/build/ShaolinMonks.ipa" Payload
+      - name: Upload unsigned IPA package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShaolinMonks-unsigned-IPA
+          path: build/ShaolinMonks.ipa
+          if-no-files-found: error
+      - name: Upload unsigned app for diagnostics
         uses: actions/upload-artifact@v4
         with:
           name: ShaolinMonksIOS-unsigned-app
           path: build/ios-device/Release-iphoneos/ShaolinMonksIOS.app
           if-no-files-found: error
-
       - name: Configure iOS simulator target
-        run: |
-          cmake -S ios -B build/ios-simulator -G Xcode -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
-
+        run: cmake -S ios -B build/ios-simulator -G Xcode -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
       - name: Build iOS simulator app
         run: cmake --build build/ios-simulator --config Release --target ShaolinMonksIOS
