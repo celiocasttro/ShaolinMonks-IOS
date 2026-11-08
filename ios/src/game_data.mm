@@ -11,6 +11,10 @@
 #include <sstream>
 #include <system_error>
 
+#ifndef IOS_EXPECTED_XBE_SHA1
+#define IOS_EXPECTED_XBE_SHA1 ""
+#endif
+
 namespace ios_game_data {
 namespace fs = std::filesystem;
 namespace {
@@ -18,10 +22,6 @@ std::string ToUtf8(NSString* value) {
     if (!value) return {};
     const char* text = [value UTF8String];
     return text ? std::string(text) : std::string{};
-}
-bool IsRegularFile(const fs::path& path) {
-    std::error_code ec;
-    return fs::is_regular_file(path, ec);
 }
 std::string Sha1File(const fs::path& path) {
     std::ifstream input(path, std::ios::binary);
@@ -57,6 +57,7 @@ std::string AssetsDirectory() {
     const auto folder = GameDirectory();
     return folder.empty() ? std::string{} : (fs::path(folder) / "assets").string();
 }
+std::string ExpectedXbeSha1() { return IOS_EXPECTED_XBE_SHA1; }
 bool PrepareFolders(std::string& error) {
     const auto folder = GameDirectory();
     if (folder.empty()) { error = "iOS did not provide an app Documents directory"; return false; }
@@ -75,6 +76,7 @@ std::vector<CandidateInfo> InspectCandidates() {
     std::vector<CandidateInfo> found;
     const auto root = GameDirectory();
     if (root.empty()) return found;
+    const std::string expected = ExpectedXbeSha1();
     const fs::path locations[] = {fs::path(root), fs::path(root) / "assets"};
     for (const auto& location : locations) {
         std::error_code ec;
@@ -91,7 +93,11 @@ std::vector<CandidateInfo> InspectCandidates() {
             item.path = it->path().string();
             item.size = it->file_size(ec);
             if (ec) { ec.clear(); item.size = 0; }
-            if (item.type == "XBE") item.sha1 = Sha1File(it->path());
+            if (item.type == "XBE") {
+                item.sha1 = Sha1File(it->path());
+                item.releaseCheckAvailable = !expected.empty() && !item.sha1.empty();
+                item.releaseMatches = item.releaseCheckAvailable && item.sha1 == expected;
+            }
             found.push_back(std::move(item));
         }
     }
