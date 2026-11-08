@@ -3,7 +3,9 @@
 // CONTROLLER page's bindings (common/pad_binds.h) go over SDL's mapping.
 #include "core/input.h"
 
+#if defined(__ANDROID__)
 #include <jni.h>
+#endif
 
 #include <algorithm>
 #include <array>
@@ -362,6 +364,7 @@ void MergeLoose(Pad& p, const PadBinds& binds) {
 
 }  // namespace
 
+#if defined(__ANDROID__)
 // ShaolinMonksActivity: the loose controller's buttons, sticks and triggers, and its letting go when the app loses the focus
 extern "C" JNIEXPORT void JNICALL Java_com_racas_shaolinmonks_ShaolinMonksActivity_nativeLooseKey(JNIEnv*, jclass, jint code,
                                                                                      jboolean down) {
@@ -388,6 +391,8 @@ extern "C" JNIEXPORT void JNICALL Java_com_racas_shaolinmonks_ShaolinMonksActivi
     g_loose = {};
     g_loose.seen = seen;
 }
+
+#endif  // __ANDROID__
 
 void Init() {
     int v = SDL_GetVersion();
