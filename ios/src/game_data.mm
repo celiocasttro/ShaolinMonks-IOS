@@ -37,7 +37,8 @@ std::vector<CandidateInfo> InspectCandidates(){std::vector<CandidateInfo>v;auto 
 @implementation SMDocumentPickerDelegate
 - (void)documentPicker:(UIDocumentPickerViewController*)controller didPickDocumentsAtURLs:(NSArray<NSURL*>*)urls {
     if(!urls.count)return; NSURL*url=urls.firstObject; BOOL access=[url startAccessingSecurityScopedResource];
-    NSString*folder=[NSString stringWithUTF8String:GameDirectory().c_str()];
+    const std::string gameDirectory=ios_game_data::GameDirectory();
+    NSString*folder=[NSString stringWithUTF8String:gameDirectory.c_str()];
     NSString*sub=[controller.title isEqualToString:@"Importar cheat"]?@"cheats":@"assets";
     NSURL*dest=[NSURL fileURLWithPath:[folder stringByAppendingPathComponent:sub] isDirectory:YES];
     [[NSFileManager defaultManager] createDirectoryAtURL:dest withIntermediateDirectories:YES attributes:nil error:nil];
@@ -60,7 +61,8 @@ static void ShowPicker(BOOL cheat){
         [root presentViewController:p animated:YES completion:nil];
     });
 }
-void PickGameFile(){ShowPicker(NO);} void PickCheatFile(){ShowPicker(YES);}
 namespace ios_game_data {
+void PickGameFile(){ShowPicker(NO);} void PickCheatFile(){ShowPicker(YES);}
+
 std::vector<std::string> ListCheatFiles(){std::vector<std::string>v;fs::path p=fs::path(GameDirectory())/"cheats";std::error_code ec;if(!fs::is_directory(p,ec))return v;for(fs::directory_iterator i(p,ec),e;!ec&&i!=e;i.increment(ec)){if(!i->is_regular_file(ec))continue;auto x=i->path().extension().string();std::transform(x.begin(),x.end(),x.begin(),[](unsigned char c){return(char)std::tolower(c);});if(x==".cht"||x==".pnach"||x==".txt")v.push_back(i->path().filename().string());}std::sort(v.begin(),v.end());return v;}
 }
