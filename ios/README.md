@@ -8,6 +8,7 @@ This folder contains the native iOS host scaffold. The Android app remains the r
 - `src/main.cpp` initializes SDL3, opens a fullscreen landscape window, requests SDL3's Metal renderer, creates an SDL renderer and handles app events.
 - `Info.plist` declares the iOS app bundle metadata, landscape orientation, and Files-app document sharing.
 - `src/game_data.mm` prepares `Documents/ShaolinMonks/assets` and discovers a user-provided `default.xbe` or `.iso` without bundling copyrighted data.
+- `src/main.cpp` now calls that module at launch and shows a basic on-device setup screen with the storage path and any detected game files.
 - GitHub Actions checks out SDL3, configures and builds both the iPhoneOS arm64 target and the arm64 iOS Simulator target with Xcode; the unsigned device `.app` is uploaded as a workflow artifact.
 
 The current screen is only a diagnostic host screen. It does not launch Shaolin Monks yet.
