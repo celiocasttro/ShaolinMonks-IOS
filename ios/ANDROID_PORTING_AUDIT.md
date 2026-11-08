@@ -31,6 +31,13 @@ The iOS target needs a separate host implementation for those responsibilities:
 - Touch input and optional controller input.
 - Safe pause/resume and renderer surface recreation.
 
+### Input modules: reuse candidates
+
+- `native/touch.cpp` handles SDL finger, mouse and keyboard events and implements the on-screen Xbox-style touch controls. Its logic is SDL-based; Android-specific behavior is mostly comments/back-button expectations and must be reviewed on iOS.
+- `native/ui.cpp` maps SDL touch, mouse and keyboard events into Dear ImGui and is also a reuse candidate.
+- `native/gyro.cpp` uses SDL sensor/gamepad sensor APIs. It can be shared where the iPhone exposes a gyroscope, but its settings filename and lifecycle behavior should be generalized.
+- `native/input.cpp` handles SDL gamepads and the shared gamepad mapping. Its JNI bridge for Android-only virtual-controller events is now guarded by `__ANDROID__`, so the SDL gamepad implementation no longer requires `jni.h` on other platforms.
+
 ### Renderer: candidate for reuse with platform guards
 
 `native/vulkan.cpp` is the existing renderer. It includes SDL Vulkan and Vulkan headers, and creates its own Vulkan instance and surface. It should remain shared if the iOS build can provide MoltenVK and all required extensions/features. Do not compile the current diagnostic SDL 2D renderer as a substitute for this game renderer.
@@ -48,7 +55,7 @@ The XBE recompiler output is expected under `generated/game`, with the original 
 1. Pin SDL3 to the same release as Android (currently `release-3.4.16`) so the two hosts use a consistent SDL API.
 2. Build and link MoltenVK's iOS XCFramework in the iPhoneOS target; confirm SDL can create a Vulkan surface on a physical iPhone.
 3. Add a capability report for swapchain, dynamic rendering, timeline semaphores, required formats, descriptor limits and presentation modes. Keep the renderer's existing fence fallback.
-4. Create an iOS host that replaces Android storage, logging, lifecycle and touch/controller input.
+4. Create an iOS host that replaces Android storage, logging and lifecycle; reuse and validate the SDL-based touch/UI/gamepad modules where possible.
 5. Replace the Android CMake source glob with explicit shared/runtime and platform-host source lists.
 6. Compile the renderer and Dear ImGui Vulkan backend against MoltenVK; resolve unsupported features based on runtime capability reports.
 7. Integrate the XBE-generated code and private game-data import, then test boot, menus, gameplay, audio, suspend/resume and controller/touch controls on a physical iPhone.
