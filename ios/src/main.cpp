@@ -1,118 +1,129 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-
 #include "game_data.h"
-
+#include <algorithm>
 #include <cstdio>
 #include <string>
 #include <vector>
 
 namespace {
-void DrawLine(SDL_Renderer* renderer, float x, float y, const char* text) {
-    SDL_RenderDebugText(renderer, x, y, text);
+enum class Page { Home, Cheats, Settings, About };
+Page page = Page::Home;
+bool running = true;
+int width = 1280, height = 720;
+struct Button { SDL_FRect rect; const char* label; int action; };
+void text(SDL_Renderer* r, float x, float y, const char* value) {
+    SDL_SetRenderDrawColor(r, 238, 230, 215, 255);
+    SDL_RenderDebugText(r, x, y, value);
 }
-std::string FormatSize(uint64_t bytes) {
-    char value[64];
-    if (bytes >= 1024ULL * 1024ULL * 1024ULL)
-        std::snprintf(value, sizeof(value), "%.2f GiB", static_cast<double>(bytes) / (1024.0 * 1024.0 * 1024.0));
-    else if (bytes >= 1024ULL * 1024ULL)
-        std::snprintf(value, sizeof(value), "%.1f MiB", static_cast<double>(bytes) / (1024.0 * 1024.0));
-    else
-        std::snprintf(value, sizeof(value), "%llu bytes", static_cast<unsigned long long>(bytes));
-    return value;
+void box(SDL_Renderer* r, SDL_FRect rect, SDL_Color color) {
+    SDL_SetRenderDrawColor(r, color.r, color.g, color.b, color.a);
+    SDL_RenderFillRect(r, &rect);
 }
+void button(SDL_Renderer* r, const Button& b, bool active=false) {
+    box(r, b.rect, active ? SDL_Color{125,25,24,255} : SDL_Color{43,22,20,255});
+    SDL_SetRenderDrawColor(r, 190,150,76,255);
+    SDL_RenderRect(r, &b.rect);
+    text(r, b.rect.x+18, b.rect.y+b.rect.h/2-4, b.label);
 }
-
-int main(int, char**) {
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "metal");
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO)) {
-        std::fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
-        return 1;
-    }
-
-    std::string folderError;
-    const bool foldersReady = ios_game_data::PrepareFolders(folderError);
-    const std::string gameFolder = ios_game_data::GameDirectory();
-    const std::vector<ios_game_data::CandidateInfo> candidates = ios_game_data::InspectCandidates();
-
-    SDL_Window* window = SDL_CreateWindow("Shaolin Monks", 1280, 720,
-        SDL_WINDOW_FULLSCREEN | SDL_WINDOW_HIGH_PIXEL_DENSITY);
-    if (!window) {
-        std::fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
-    if (!renderer) {
-        std::fprintf(stderr, "SDL_CreateRenderer failed: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Log("Game data folder: %s", gameFolder.c_str());
-    if (!foldersReady) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", folderError.c_str());
-    if (!ios_game_data::ExpectedXbeSha1().empty()) SDL_Log("Expected XBE SHA-1: %s", ios_game_data::ExpectedXbeSha1().c_str());
-    for (const auto& candidate : candidates) {
-        SDL_Log("Game candidate: %s (%s, %llu bytes)%s%s", candidate.path.c_str(), candidate.type.c_str(),
-            static_cast<unsigned long long>(candidate.size), candidate.sha1.empty() ? "" : ", SHA-1 ",
-            candidate.sha1.c_str());
-        if (candidate.type == "ISO") SDL_Log("ISO Xbox filesystem: %s", candidate.containsXbe ? "valid; default.xbe found" : "not recognized or no default.xbe");
-        if (candidate.type == "XBE" || candidate.containsXbe) {
-            if (!candidate.releaseCheckAvailable) SDL_Log("XBE release check unavailable (expected hash not configured or read failed)");
-            else SDL_Log("XBE release match: %s", candidate.releaseMatches ? "YES" : "NO");
-        }
-    }
-
-    bool running = true;
-    while (running) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT ||
-                (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)) running = false;
-        }
-        SDL_SetRenderDrawColor(renderer, 8, 8, 8, 255);
-        SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer, 220, 20, 35, 255);
-        SDL_FRect accent{42.0f, 52.0f, 96.0f, 8.0f};
-        SDL_RenderFillRect(renderer, &accent);
-        SDL_SetRenderDrawColor(renderer, 245, 245, 245, 255);
-        DrawLine(renderer, 42.0f, 88.0f, "MORTAL KOMBAT: SHAOLIN MONKS");
-        SDL_SetRenderDrawColor(renderer, 190, 190, 190, 255);
-        DrawLine(renderer, 42.0f, 124.0f, "iOS PORT - GAME DATA INSPECTION");
-        DrawLine(renderer, 42.0f, 184.0f, "Files > On My iPhone > Shaolin Monks");
-        DrawLine(renderer, 42.0f, 216.0f, "Put default.xbe or .iso in this folder or its assets subfolder.");
-        DrawLine(renderer, 42.0f, 272.0f, foldersReady ? "Storage folder: READY" : "Storage folder: ERROR");
-        DrawLine(renderer, 42.0f, 304.0f, gameFolder.c_str());
-        if (!candidates.empty()) {
-            SDL_SetRenderDrawColor(renderer, 120, 220, 140, 255);
-            DrawLine(renderer, 42.0f, 360.0f, "Detected game files:");
-            float y = 392.0f;
-            for (const auto& candidate : candidates) {
-                if (y > 620.0f) break;
-                const std::string size = FormatSize(candidate.size);
-                SDL_SetRenderDrawColor(renderer, 225, 225, 225, 255);
-                DrawLine(renderer, 42.0f, y, candidate.path.c_str());
-                y += 24.0f;
-                std::string detail = candidate.type + " | " + size;
-                if (!candidate.sha1.empty()) detail += " | SHA-1: " + candidate.sha1;
-                if (candidate.type == "ISO") detail += candidate.containsXbe ? " | XBE FOUND" : " | XBOX ISO NOT READ";
-                if (candidate.type == "XBE" || candidate.containsXbe) detail += candidate.releaseCheckAvailable ? (candidate.releaseMatches ? " | RELEASE MATCH" : " | DIFFERENT RELEASE") : " | RELEASE CHECK N/A";
-                SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
-                DrawLine(renderer, 62.0f, y, detail.c_str());
-                y += 32.0f;
+void header(SDL_Renderer* r, const char* subtitle) {
+    box(r, {0,0,(float)width,(float)height}, {8,7,8,255});
+    box(r, {0,0,(float)width,12}, {155,25,28,255});
+    text(r, 48, 48, "MORTAL KOMBAT");
+    SDL_SetRenderDrawColor(r, 205,164,82,255);
+    SDL_RenderLine(r, 48, 70, (float)width-48, 70);
+    text(r, 48, 91, subtitle);
+}
+void render(SDL_Renderer* r, const std::vector<ios_game_data::CandidateInfo>& games) {
+    if (page == Page::Home) {
+        header(r, "SHAOLIN MONKS  |  iOS PORT");
+        text(r, 48, 142, "Bem-vindo. Selecione os arquivos do jogo para preparar a biblioteca.");
+        Button b[] = {{{48,190,330,62},"SELECIONAR ISO / XBE",1},
+                      {{48,270,330,62},"CHEATS  >",2},
+                      {{48,350,330,62},"CONFIGURACOES  >",3},
+                      {{48,430,330,62},"SOBRE  >",4}};
+        for (const auto& v:b) button(r,v);
+        text(r, 430, 205, "JOGO");
+        if (games.empty()) text(r,430,242,"Nenhum arquivo de jogo importado.");
+        else {
+            float y=242;
+            for (const auto& g:games) {
+                text(r,430,y,g.path.c_str());
+                y+=24;
             }
-        } else {
-            SDL_SetRenderDrawColor(renderer, 235, 190, 100, 255);
-            DrawLine(renderer, 42.0f, 376.0f, "No game files detected yet.");
         }
-        SDL_SetRenderDrawColor(renderer, 120, 120, 120, 255);
-        DrawLine(renderer, 42.0f, 680.0f, "XBE release fingerprint check is active when the private build XBE is configured.");
+        text(r,48,(float)height-42,"IMPORTANTE: esta versao e uma interface inicial; o motor do jogo ainda nao esta integrado.");
+    } else if (page == Page::Cheats) {
+        header(r, "EXTRAS  /  CHEATS");
+        text(r,48,142,"Importe arquivos de codigos pelo app Arquivos.");
+        Button back{{48,190,250,58},"VOLTAR",10};
+        Button import{{320,190,300,58},"IMPORTAR ARQUIVO",11};
+        button(r,back); button(r,import,true);
+        const auto cheats=ios_game_data::ListCheatFiles();
+        text(r,48,285,"ARQUIVOS IMPORTADOS");
+        if (cheats.empty()) text(r,48,325,"Nenhum arquivo .cht, .pnach ou .txt encontrado.");
+        else { float y=325; for (const auto& c:cheats) { text(r,64,y,c.c_str()); y+=25; } }
+        text(r,48,(float)height-70,"A leitura/importacao de arquivos e a interface estao em preparacao.");
+        text(r,48,(float)height-48,"Os codigos ainda NAO sao aplicados ao jogo: falta integrar o runtime e validar formatos.");
+    } else {
+        header(r, page == Page::Settings ? "CONFIGURACOES" : "SOBRE");
+        Button back{{48,190,250,58},"VOLTAR",10}; button(r,back);
+        if (page == Page::Settings) text(r,48,285,"Opcoes graficas, audio e controles serao habilitadas com o runtime.");
+        else text(r,48,285,"Port iOS nao oficial. Requer os arquivos originais do jogo fornecidos pelo usuario.");
+    }
+}
+int actionAt(float x,float y) {
+    if (page==Page::Home) {
+        if (x>=48&&x<=378&&y>=190&&y<=252) return 1;
+        if (x>=48&&x<=378&&y>=270&&y<=332) return 2;
+        if (x>=48&&x<=378&&y>=350&&y<=412) return 3;
+        if (x>=48&&x<=378&&y>=430&&y<=492) return 4;
+    } else if (page==Page::Cheats) {
+        if (x>=48&&x<=298&&y>=190&&y<=248) return 10;
+        if (x>=320&&x<=620&&y>=190&&y<=248) return 11;
+    } else if (x>=48&&x<=298&&y>=190&&y<=248) return 10;
+    return 0;
+}
+void handleAction(int a) {
+    switch(a) {
+        case 1: ios_game_data::PickGameFile(); break;
+        case 2: page=Page::Cheats; break;
+        case 3: page=Page::Settings; break;
+        case 4: page=Page::About; break;
+        case 10: page=Page::Home; break;
+        case 11: ios_game_data::PickCheatFile(); break;
+    }
+}
+}
+int main(int, char**) {
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER,"metal");
+    if (!SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMEPAD|SDL_INIT_AUDIO)) return 1;
+    std::string error;
+    ios_game_data::PrepareFolders(error);
+    SDL_Window* window=SDL_CreateWindow("Shaolin Monks",1280,720,SDL_WINDOW_FULLSCREEN|SDL_WINDOW_HIGH_PIXEL_DENSITY);
+    if (!window) { SDL_Quit(); return 1; }
+    SDL_Renderer* renderer=SDL_CreateRenderer(window,nullptr);
+    if (!renderer) { SDL_DestroyWindow(window); SDL_Quit(); return 1; }
+    SDL_GetWindowSize(window,&width,&height);
+    while(running) {
+        SDL_Event event;
+        while(SDL_PollEvent(&event)) {
+            if(event.type==SDL_EVENT_QUIT) running=false;
+            else if(event.type==SDL_EVENT_FINGER_DOWN) {
+                int w=0,h=0; SDL_GetWindowSize(window,&w,&h);
+                handleAction(actionAt(event.tfinger.x*w,event.tfinger.y*h));
+            } else if(event.type==SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                handleAction(actionAt((float)event.button.x,(float)event.button.y));
+            } else if(event.type==SDL_EVENT_KEY_DOWN && event.key.key==SDLK_ESCAPE) {
+                if(page==Page::Home) running=false; else page=Page::Home;
+            }
+        }
+        SDL_GetWindowSize(window,&width,&height);
+        auto games=ios_game_data::InspectCandidates();
+        SDL_SetRenderDrawColor(renderer,8,7,8,255); SDL_RenderClear(renderer);
+        render(renderer,games);
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 0;
+    SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window); SDL_Quit(); return 0;
 }
