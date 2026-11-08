@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(ShaolinMonksIOSHost LANGUAGES C CXX OBJC)
+project(ShaolinMonksIOSHost LANGUAGES C CXX OBJC OBJCXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,8 +20,9 @@ add_subdirectory("${SDL_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/SDL3" EXCLUDE_FROM_ALL
 
 add_executable(ShaolinMonksIOS MACOSX_BUNDLE
   src/main.cpp
+  src/game_data.mm
 )
-target_link_libraries(ShaolinMonksIOS PRIVATE SDL3-static)
+target_link_libraries(ShaolinMonksIOS PRIVATE SDL3-static "-framework Foundation")
 target_include_directories(ShaolinMonksIOS PRIVATE "${SDL_SOURCE_DIR}/include")
 
 set_target_properties(ShaolinMonksIOS PROPERTIES
