@@ -19,6 +19,7 @@ The Android port remains the reference implementation. iOS work is isolated on t
 - `ios/src/main.cpp`: minimal SDL3 app host with a non-zero fullscreen landscape window, a Metal renderer preference, event loop and renderer diagnostic screen.
 - `ios/Info.plist`: app bundle metadata, landscape orientation, and Files-app document sharing.
 - `ios/src/game_data.mm` / `.h`: iOS Documents folder preparation and discovery of user-provided `default.xbe` / `.iso` files.
+- `ios/src/main.cpp`: connects storage preparation/discovery to the SDL host and displays the folder path plus detected candidates on screen.
 - `ios/README.md`: current architecture and next tasks.
 - `ios/ANDROID_PORTING_AUDIT.md`: verified Android host/rendering dependencies, reusable SDL input modules and a staged MoltenVK-first iOS plan.
 - `native/input.cpp`: Android JNI-only virtual-controller callbacks are now guarded by `__ANDROID__`; SDL gamepad handling can be compiled on other platforms without `jni.h`.
