@@ -5,9 +5,9 @@ This folder contains the native iOS host scaffold. The Android app remains the r
 ## What exists now
 
 - `CMakeLists.txt` creates an iOS app bundle and links SDL3 as a static library.
-- `src/main.cpp` initializes SDL3, opens a fullscreen landscape window, creates an SDL renderer and handles app events.
+- `src/main.cpp` initializes SDL3, opens a fullscreen landscape window, requests SDL3's Metal renderer, creates an SDL renderer and handles app events.
 - `Info.plist` declares the iOS app bundle metadata and landscape orientation.
-- GitHub Actions checks out SDL3, configures the iPhoneOS arm64 target with Xcode, builds the unsigned `.app`, and uploads it as a workflow artifact.
+- GitHub Actions checks out SDL3, configures and builds both the iPhoneOS arm64 target and the arm64 iOS Simulator target with Xcode; the unsigned device `.app` is uploaded as a workflow artifact.
 
 The current screen is only a diagnostic host screen. It does not launch Shaolin Monks yet.
 
@@ -19,7 +19,7 @@ Expected artifact: `ShaolinMonksIOS-unsigned-app`.
 
 ## Next engineering tasks
 
-1. Confirm the macOS workflow completes and fix any compiler/linker errors.
+1. Confirm the macOS device and simulator builds complete and fix any compiler/linker errors.
 2. Identify and isolate Android-only source files and libraries in the root CMake target.
 3. Port the Vulkan renderer and Dear ImGui Vulkan backend to Metal, or validate MoltenVK end-to-end.
 4. Replace Android storage, lifecycle, logging and JNI dependencies with iOS equivalents.
