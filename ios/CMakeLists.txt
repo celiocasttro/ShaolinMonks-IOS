@@ -23,10 +23,10 @@ add_executable(ShaolinMonksIOS MACOSX_BUNDLE
 )
 target_link_libraries(ShaolinMonksIOS PRIVATE SDL3-static)
 target_include_directories(ShaolinMonksIOS PRIVATE "${SDL_SOURCE_DIR}/include")
-target_compile_definitions(ShaolinMonksIOS PRIVATE SDL_MAIN_HANDLED=0)
 
 set_target_properties(ShaolinMonksIOS PROPERTIES
   MACOSX_BUNDLE TRUE
+  MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
   MACOSX_BUNDLE_GUI_IDENTIFIER "com.celiocasttro.shaolinmonks"
   MACOSX_BUNDLE_BUNDLE_NAME "Shaolin Monks"
   MACOSX_BUNDLE_BUNDLE_VERSION "1"
