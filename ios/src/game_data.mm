@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <CommonCrypto/CommonDigest.h>
 #include "game_data.h"
+#include "kernel/disc.h"
 
 #include <algorithm>
 #include <array>
@@ -22,6 +23,22 @@ std::string ToUtf8(NSString* value) {
     if (!value) return {};
     const char* text = [value UTF8String];
     return text ? std::string(text) : std::string{};
+}
+std::string Sha1Bytes(const std::vector<uint8_t>& bytes) {
+    CC_SHA1_CTX context;
+    CC_SHA1_Init(&context);
+    size_t offset = 0;
+    while (offset < bytes.size()) {
+        const size_t count = std::min<size_t>(bytes.size() - offset, 1024 * 1024);
+        CC_SHA1_Update(&context, bytes.data() + offset, static_cast<CC_LONG>(count));
+        offset += count;
+    }
+    unsigned char digest[CC_SHA1_DIGEST_LENGTH];
+    CC_SHA1_Final(digest, &context);
+    std::ostringstream result;
+    result << std::hex << std::setfill('0');
+    for (unsigned char byte : digest) result << std::setw(2) << static_cast<unsigned int>(byte);
+    return result.str();
 }
 std::string Sha1File(const fs::path& path) {
     std::ifstream input(path, std::ios::binary);
