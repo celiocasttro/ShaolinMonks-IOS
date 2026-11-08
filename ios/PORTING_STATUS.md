@@ -14,9 +14,9 @@ The Android port remains the reference implementation. iOS work is isolated on t
 ## Implemented on this branch
 
 - `.github/workflows/ios-port-audit.yml`: macOS toolchain/repository audit.
-- `.github/workflows/ios-sdl3-smoke.yml`: builds a native iOS app target on a macOS runner and uploads the unsigned .app bundle.
+- `.github/workflows/ios-sdl3-smoke.yml`: builds iPhoneOS arm64 and iOS Simulator arm64 targets on a macOS runner, and uploads the unsigned device .app bundle.
 - `ios/CMakeLists.txt`: standalone iOS CMake target linking SDL3 static.
-- `ios/src/main.cpp`: minimal SDL3 app host with fullscreen landscape window, event loop and renderer diagnostic screen.
+- `ios/src/main.cpp`: minimal SDL3 app host with a non-zero fullscreen landscape window, a Metal renderer preference, event loop and renderer diagnostic screen.
 - `ios/Info.plist`: app bundle metadata and landscape orientation.
 - `ios/README.md`: current architecture and next tasks.
 
