@@ -1,29 +1,32 @@
 # iOS port work area
 
-This folder contains the iOS-specific port plan and build experiments. The Android app remains the reference implementation and is not modified by this work.
+This folder contains the native iOS host scaffold. The Android app remains the reference implementation and is not modified by this work.
 
-## Current target
+## What exists now
 
-- Native iPhone/iPad build (arm64, iOS 15.0 minimum for the first smoke test).
-- SDL3 for window lifecycle, input and audio.
-- The game runtime and generated Xbox XBE code must be made portable before the full app can link.
-- Graphics are a separate blocker: the Android host uses Vulkan and the ImGui Vulkan backend. iOS needs a verified Metal path or a deliberately integrated MoltenVK stack.
+- `CMakeLists.txt` creates an iOS app bundle and links SDL3 as a static library.
+- `src/main.cpp` initializes SDL3, opens a fullscreen landscape window, creates an SDL renderer and handles app events.
+- `Info.plist` declares the iOS app bundle metadata and landscape orientation.
+- GitHub Actions checks out SDL3, configures the iPhoneOS arm64 target with Xcode, builds the unsigned `.app`, and uploads it as a workflow artifact.
 
-## First validation
+The current screen is only a diagnostic host screen. It does not launch Shaolin Monks yet.
 
-The `iOS SDL3 device build smoke test` workflow checks whether the pinned SDL3 3.2 release branch can be configured and compiled for the iPhoneOS SDK on GitHub's macOS runner. This is a dependency test, not a game build and does not produce an IPA.
+## Run the build
 
-Run it from GitHub Actions using **iOS SDL3 device build smoke test → Run workflow**.
+The workflow is triggered by commits to `ios/**` on `ios-port`, or manually from GitHub Actions using **iOS native host build → Run workflow**.
+
+Expected artifact: `ShaolinMonksIOS-unsigned-app`.
 
 ## Next engineering tasks
 
-1. Identify and isolate Android-only source files and libraries in the root CMake target.
-2. Port the Vulkan renderer and ImGui backend to Metal (or validate MoltenVK end-to-end).
-3. Replace Android storage, activity lifecycle, logging and JNI dependencies with iOS equivalents.
-4. Make the XBE recompiler/toolchain work on macOS, or generate the C++ game sources in a separate reproducible Windows job and transfer only generated source artifacts.
-5. Add an SDL3 iOS app host and an Xcode archive/export pipeline.
-6. Add a private game-data import flow. Game disc files must not be committed to this public repository.
+1. Confirm the macOS workflow completes and fix any compiler/linker errors.
+2. Identify and isolate Android-only source files and libraries in the root CMake target.
+3. Port the Vulkan renderer and Dear ImGui Vulkan backend to Metal, or validate MoltenVK end-to-end.
+4. Replace Android storage, lifecycle, logging and JNI dependencies with iOS equivalents.
+5. Make XBE recompilation reproducible on macOS, or generate C++ game sources in a separate Windows job.
+6. Connect the game runtime to the iOS host and add a private/local game-data import flow.
+7. Add Apple signing/provisioning before exporting an installable IPA.
 
 ## Important
 
-A successful SDL3 smoke test does not mean the game is ported. No game assets are included, and a distributable IPA will require Apple signing/provisioning.
+A successful host build does not mean the game is ported. No game disc data is included in this public repository. The IPA will not be installable on a normal iPhone until an appropriate signing/sideloading route is configured.
