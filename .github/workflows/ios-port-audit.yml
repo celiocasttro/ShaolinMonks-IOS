@@ -11,6 +11,12 @@ on:
       - 'native/**'
       - 'src/**'
 
+# Keep only the newest run for this workflow/branch. This prevents a commit
+# burst from filling the GitHub-hosted macOS runner queue with stale audits.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
