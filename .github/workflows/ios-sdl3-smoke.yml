@@ -8,6 +8,12 @@ on:
       - 'ios/**'
       - '.github/workflows/ios-sdl3-smoke.yml'
 
+# Keep only the newest run for this workflow/branch. This prevents a commit
+# burst from filling the GitHub-hosted macOS runner queue with stale builds.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
