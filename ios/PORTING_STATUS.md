@@ -9,18 +9,20 @@ The Android port remains the reference implementation. iOS work is isolated on t
 - App Documents storage at `On My iPhone/Shaolin Monks`, with an `assets` subfolder.
 - Discovery of extracted `default.xbe` and `.iso` files in both supported folders.
 - File inspection metadata: type, size and streaming SHA-1 for extracted XBE files.
-- Optional build-time release fingerprint: CMake accepts `IOS_XBE_IMAGE` (defaults to the repository's private `assets/default.xbe` when present), calculates its SHA-1 and makes it available to the app.
-- Extracted `default.xbe` is now compared against that expected fingerprint; the diagnostic screen reports a match, a different release, or that verification is unavailable.
+- Optional build-time release fingerprint: CMake accepts `IOS_XBE_IMAGE` (defaults to the repository's private `assets/default.xbe` when present), calculates its SHA-1 and exposes it to the app.
+- Extracted XBE files are compared against the expected build fingerprint.
+- The shared Xbox disc reader from the SDK is now compiled into the iOS host. Each detected ISO is opened and its Xbox filesystem is inspected for `default.xbe`; the embedded executable is hashed and compared against the expected fingerprint.
+- The diagnostic screen reports whether an ISO is recognized, whether it contains the executable, and whether its release matches.
 - No copyrighted game data is added to the public repository.
 
 ## Current milestone
 
-**Milestone 1 — iOS host and XBE release inspection.** File discovery, file sizing, SHA-1 calculation and optional expected-release comparison are implemented in the host scaffold. The expected hash is only available when the original build XBE is supplied privately at CMake configure time. ISO files are discovered but are not yet parsed or mounted by the iOS host.
+**Milestone 2 — game-data validation.** The iOS host now reuses the shared SDK Xbox ISO reader to inspect disc images and identify/hash their embedded executable. The current host only inspects the ISO; it does not yet retain/mount the selected disc or boot the recompiled game.
 
 ## Next engineering work
 
 1. Verify the latest macOS iOS-device and simulator builds and fix any compile errors.
-2. Port the Android loader's ISO release detection and Xbox ISO parsing/mounting to the iOS host using the shared SDK runtime.
+2. Adapt the game loader to retain the selected `kernel::Disc`, mount it with `kernel::MountDisc`, and provide the validated executable bytes to the runtime.
 3. Replace the diagnostic screen with the actual recompiled game runtime.
 4. Port or validate the renderer (MoltenVK or a native Metal backend), then wire game audio, lifecycle, touch controls and gamepad input.
 5. Make XBE recompilation reproducible on macOS, or generate the C++ game sources in a separate Windows job.
