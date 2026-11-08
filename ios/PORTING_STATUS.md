@@ -1,38 +1,39 @@
 # iOS port — status and implementation plan
 
-The Android port is the reference implementation. All iOS work is isolated on the `ios-port` branch.
+The Android port remains the reference implementation. iOS work is isolated on the `ios-port` branch.
 
 ## Verified repository facts
 
 - The game is an original Xbox `default.xbe` statically recompiled to C++.
-- The Android host's root CMake target links Vulkan, Android and Android logging libraries.
-- The host compiles Android-specific files from `native/` and game/runtime files from `src/`.
-- SDL3 is the cross-platform window/input/audio layer, but the current Android CMake setup expects Gradle to provide an SDL checkout.
-- The documented `build.bat` requires Windows, Visual Studio and the Android NDK; it is not an iOS build pipeline.
-- The Android renderer uses Vulkan and Dear ImGui's Vulkan backend. iOS needs a verified Metal solution or a tested MoltenVK integration.
+- The Android host links Vulkan, Android and Android logging libraries.
+- Android-specific host files live under `native/`; game/runtime code lives under `src/`.
+- SDL3 is already the cross-platform window/input/audio layer.
+- The current `build.bat` requires Windows, Visual Studio and the Android NDK; it is not an iOS build pipeline.
+- The Android renderer uses Vulkan and Dear ImGui's Vulkan backend. iOS requires a Metal renderer or a fully validated MoltenVK route.
 
-## Work committed on this branch
+## Implemented on this branch
 
-1. `.github/workflows/ios-port-audit.yml` — inventories the Apple toolchain and current platform blockers on a macOS runner.
-2. `.github/workflows/ios-sdl3-smoke.yml` — independently configures and builds SDL3 for the iPhoneOS arm64 SDK.
-3. `ios/README.md` — records the iOS target, validation boundary and engineering sequence.
+- `.github/workflows/ios-port-audit.yml`: macOS toolchain/repository audit.
+- `.github/workflows/ios-sdl3-smoke.yml`: builds a native iOS app target on a macOS runner and uploads the unsigned .app bundle.
+- `ios/CMakeLists.txt`: standalone iOS CMake target linking SDL3 static.
+- `ios/src/main.cpp`: minimal SDL3 app host with fullscreen landscape window, event loop and renderer diagnostic screen.
+- `ios/Info.plist`: app bundle metadata and landscape orientation.
+- `ios/README.md`: current architecture and next tasks.
 
 ## Current milestone
 
-**Milestone 1: validate the SDL3 iOS dependency.** The new workflow is ready to run in GitHub Actions. Its result must be checked before treating SDL3 as validated for this target.
+**Milestone 1 — native SDL3 iOS host scaffold.** The app shell and CI build path are committed. The workflow must run successfully before we can call the scaffold build-verified. The diagnostic screen is not the game.
 
-This is not yet an iOS game host and does not generate an IPA. There is still no Xcode app target, iOS renderer, iOS storage/lifecycle layer, or macOS-compatible XBE recompiler pipeline.
+## Remaining engineering work
 
-## Remaining implementation
+1. Run and fix the macOS iOS-device build until it produces the unsigned `.app` artifact.
+2. Replace the diagnostic screen with the game's runtime entry point after isolating portable sources from Android host code.
+3. Port the renderer and Dear ImGui backend to Metal, or validate MoltenVK end-to-end on iOS.
+4. Replace Android storage, activity lifecycle, logging and JNI assumptions with iOS equivalents.
+5. Make the XBE recompiler reproducible on macOS, or generate the C++ game sources in a separate Windows job.
+6. Implement private/local import of legally obtained game files; never commit copyrighted disc data to this public repository.
+7. Add signing/provisioning and IPA export after the unsigned app builds and launches.
 
-1. Separate portable runtime/game sources from the Android host.
-2. Port the renderer and ImGui backend to Metal, or validate MoltenVK end-to-end on iOS.
-3. Implement iOS lifecycle, logging, file import and save paths.
-4. Make the XBE recompilation process reproducible on macOS, or produce generated C++ in a separate Windows job.
-5. Add the SDL3 iOS application target and build/archive workflow.
-6. Support private/local installation of legally obtained game files; do not commit copyrighted disc data to this public repository.
-7. Configure Apple signing/provisioning before exporting an installable IPA.
+## Important boundary
 
-## Definition of done
-
-The iOS app builds on a macOS runner, imports the user's game files privately, launches the game with graphics/audio/input/saves working, and exports a signed IPA after signing credentials are configured.
+This branch currently contains an iOS shell, not a working port of the game. No game assets are included. An installable signed IPA requires Apple signing and provisioning.
