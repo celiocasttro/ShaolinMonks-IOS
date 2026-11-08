@@ -1,27 +1,38 @@
 # iOS port — status and implementation plan
 
-This repository is currently the Android port. The iOS port is being developed on the ios-port branch so the Android build remains untouched.
+The Android port is the reference implementation. All iOS work is isolated on the `ios-port` branch.
 
-## Verified starting point
-- The game executable is an original Xbox default.xbe statically recompiled to C++.
-- The existing host is Android-specific: the root CMake target links vulkan, android, and log, and compiles files from native/.
-- SDL3 is already the cross-platform window/input/audio layer.
-- The Android app expects legally obtained game disc files outside the source repository.
+## Verified repository facts
 
-## Required iOS work
-1. Separate portable game/runtime sources from the Android host.
-2. Add an iOS host target and app entry point using SDL3's iOS integration.
-3. Replace Android-only storage, lifecycle, logging, permissions and JNI/NDK assumptions with iOS equivalents.
-4. Verify graphics: iOS does not expose Vulkan natively, so use a tested MoltenVK path or port the renderer to Metal.
-5. Build the Xbox XBE recompiler and generated game code in a macOS-compatible pipeline. The documented build.bat currently requires Windows/Visual Studio.
-6. Add private/local game-data installation. Do not commit copyrighted ISO/disc data to this public repository.
-7. Build unsigned first; IPA distribution requires Apple signing and provisioning.
+- The game is an original Xbox `default.xbe` statically recompiled to C++.
+- The Android host's root CMake target links Vulkan, Android and Android logging libraries.
+- The host compiles Android-specific files from `native/` and game/runtime files from `src/`.
+- SDL3 is the cross-platform window/input/audio layer, but the current Android CMake setup expects Gradle to provide an SDL checkout.
+- The documented `build.bat` requires Windows, Visual Studio and the Android NDK; it is not an iOS build pipeline.
+- The Android renderer uses Vulkan and Dear ImGui's Vulkan backend. iOS needs a verified Metal solution or a tested MoltenVK integration.
+
+## Work committed on this branch
+
+1. `.github/workflows/ios-port-audit.yml` — inventories the Apple toolchain and current platform blockers on a macOS runner.
+2. `.github/workflows/ios-sdl3-smoke.yml` — independently configures and builds SDL3 for the iPhoneOS arm64 SDK.
+3. `ios/README.md` — records the iOS target, validation boundary and engineering sequence.
 
 ## Current milestone
-The first GitHub Actions workflow on this branch audits the repository on a macOS runner and uploads a report. It is an audit, not an IPA build: there is not yet an Xcode project, iOS host, or iOS-compatible recompiler pipeline.
+
+**Milestone 1: validate the SDL3 iOS dependency.** The new workflow is ready to run in GitHub Actions. Its result must be checked before treating SDL3 as validated for this target.
+
+This is not yet an iOS game host and does not generate an IPA. There is still no Xcode app target, iOS renderer, iOS storage/lifecycle layer, or macOS-compatible XBE recompiler pipeline.
+
+## Remaining implementation
+
+1. Separate portable runtime/game sources from the Android host.
+2. Port the renderer and ImGui backend to Metal, or validate MoltenVK end-to-end on iOS.
+3. Implement iOS lifecycle, logging, file import and save paths.
+4. Make the XBE recompilation process reproducible on macOS, or produce generated C++ in a separate Windows job.
+5. Add the SDL3 iOS application target and build/archive workflow.
+6. Support private/local installation of legally obtained game files; do not commit copyrighted disc data to this public repository.
+7. Configure Apple signing/provisioning before exporting an installable IPA.
 
 ## Definition of done
-- iOS app builds on a macOS GitHub Actions runner.
-- Game data can be installed without embedding copyrighted assets in the public repository.
-- The app launches the game and supports rendering, touch/controller input, audio, saves, pause/resume and orientation.
-- A signed IPA is exported only after signing credentials and provisioning are configured.
+
+The iOS app builds on a macOS runner, imports the user's game files privately, launches the game with graphics/audio/input/saves working, and exports a signed IPA after signing credentials are configured.
