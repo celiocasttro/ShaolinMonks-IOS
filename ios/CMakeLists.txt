@@ -34,7 +34,7 @@ add_executable(ShaolinMonksIOS MACOSX_BUNDLE
   src/game_data.mm
   ../sdk/runtime/kernel/disc.cpp
 )
-target_link_libraries(ShaolinMonksIOS PRIVATE SDL3-static "-framework Foundation")
+target_link_libraries(ShaolinMonksIOS PRIVATE SDL3-static "-framework Foundation" "-framework UIKit" "-framework UniformTypeIdentifiers")
 target_include_directories(ShaolinMonksIOS PRIVATE "${SDL_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../sdk/runtime")
 target_compile_definitions(ShaolinMonksIOS PRIVATE IOS_EXPECTED_XBE_SHA1="${IOS_EXPECTED_XBE_SHA1}")
 
