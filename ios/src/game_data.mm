@@ -30,6 +30,7 @@ std::string ExpectedXbeSha1(){return IOS_EXPECTED_XBE_SHA1;}
 bool PrepareFolders(std::string& e){auto d=GameDirectory();if(d.empty()){e="Documents unavailable";return false;}std::error_code ec;fs::create_directories(fs::path(d)/"assets",ec);fs::create_directories(fs::path(d)/"cheats",ec);if(ec){e=ec.message();return false;}e.clear();return true;}
 std::vector<std::string> FindCandidates(){std::vector<std::string>v;for(auto&x:InspectCandidates())v.push_back(x.path);return v;}
 std::vector<CandidateInfo> InspectCandidates(){std::vector<CandidateInfo>v;auto root=GameDirectory();if(root.empty())return v;std::string expected=ExpectedXbeSha1();for(auto loc:{fs::path(root),fs::path(root)/"assets"}){std::error_code ec;if(!fs::is_directory(loc,ec))continue;for(fs::directory_iterator i(loc,ec),end;!ec&&i!=end;i.increment(ec)){if(!i->is_regular_file(ec))continue;std::string ext=i->path().extension().string();std::transform(ext.begin(),ext.end(),ext.begin(),[](unsigned char c){return(char)std::tolower(c);});CandidateInfo x;if(ext==".xbe"&&i->path().filename()=="default.xbe")x.type="XBE";else if(ext==".iso")x.type="ISO";else continue;x.path=i->path().filename().string();x.size=i->file_size(ec);if(ec){ec.clear();x.size=0;}if(x.type=="XBE")x.sha1=Sha1File(i->path());else{kernel::Disc disc;std::string err;std::vector<uint8_t>xbe;if(disc.Open(i->path(),err)&&disc.Load("default.xbe",xbe)){x.containsXbe=true;x.sha1=Sha1Bytes(xbe);}}x.releaseCheckAvailable=!expected.empty()&&!x.sha1.empty();x.releaseMatches=x.releaseCheckAvailable&&x.sha1==expected;v.push_back(std::move(x));}}return v;}
+} // namespace ios_game_data
 
 @interface SMDocumentPickerDelegate : NSObject<UIDocumentPickerDelegate>
 @end
@@ -60,5 +61,6 @@ static void ShowPicker(BOOL cheat){
     });
 }
 void PickGameFile(){ShowPicker(NO);} void PickCheatFile(){ShowPicker(YES);}
+namespace ios_game_data {
 std::vector<std::string> ListCheatFiles(){std::vector<std::string>v;fs::path p=fs::path(GameDirectory())/"cheats";std::error_code ec;if(!fs::is_directory(p,ec))return v;for(fs::directory_iterator i(p,ec),e;!ec&&i!=e;i.increment(ec)){if(!i->is_regular_file(ec))continue;auto x=i->path().extension().string();std::transform(x.begin(),x.end(),x.begin(),[](unsigned char c){return(char)std::tolower(c);});if(x==".cht"||x==".pnach"||x==".txt")v.push_back(i->path().filename().string());}std::sort(v.begin(),v.end());return v;}
 }
