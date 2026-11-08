@@ -52,10 +52,10 @@ int main(int, char**) {
 
     SDL_Log("Game data folder: %s", gameFolder.c_str());
     if (!foldersReady) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", folderError.c_str());
-    for (const auto& candidate : candidates) {
+    if (!ios_game_data::ExpectedXbeSha1().empty()) SDL_Log("Expected XBE SHA-1: %s", ios_game_data::ExpectedXbeSha1().c_str());\n    for (const auto& candidate : candidates) {
         SDL_Log("Game candidate: %s (%s, %llu bytes)%s%s", candidate.path.c_str(), candidate.type.c_str(),
             static_cast<unsigned long long>(candidate.size), candidate.sha1.empty() ? "" : ", SHA-1 ",
-            candidate.sha1.c_str());
+            candidate.sha1.c_str());\n        if (candidate.type == "XBE") {\n            if (!candidate.releaseCheckAvailable) SDL_Log("XBE release check unavailable (expected hash not configured or read failed)");\n            else SDL_Log("XBE release match: %s", candidate.releaseMatches ? "YES" : "NO");\n        }
     }
 
     bool running = true;
@@ -89,7 +89,7 @@ int main(int, char**) {
                 DrawLine(renderer, 42.0f, y, candidate.path.c_str());
                 y += 24.0f;
                 std::string detail = candidate.type + " | " + size;
-                if (!candidate.sha1.empty()) detail += " | SHA-1: " + candidate.sha1;
+                if (!candidate.sha1.empty()) detail += " | SHA-1: " + candidate.sha1;\n                if (candidate.type == "XBE") detail += candidate.releaseCheckAvailable ? (candidate.releaseMatches ? " | RELEASE MATCH" : " | DIFFERENT RELEASE") : " | RELEASE CHECK N/A";
                 SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
                 DrawLine(renderer, 62.0f, y, detail.c_str());
                 y += 32.0f;
@@ -99,7 +99,7 @@ int main(int, char**) {
             DrawLine(renderer, 42.0f, 376.0f, "No game files detected yet.");
         }
         SDL_SetRenderDrawColor(renderer, 120, 120, 120, 255);
-        DrawLine(renderer, 42.0f, 680.0f, "SHA-1 inspection is active; XBE release matching and ISO mounting are next.");
+        DrawLine(renderer, 42.0f, 680.0f, "XBE release fingerprint check is active when the private build XBE is configured.");
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
