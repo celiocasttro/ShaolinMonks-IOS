@@ -9,7 +9,7 @@ The Android port remains the reference implementation. iOS work is isolated on t
 - Android-specific host files live under `native/`; game/runtime code lives under `src/`.
 - SDL3 is already the cross-platform window/input/audio layer.
 - The current `build.bat` requires Windows, Visual Studio and the Android NDK; it is not an iOS build pipeline.
-- The Android renderer uses Vulkan and Dear ImGui's Vulkan backend. iOS requires a Metal renderer or a fully validated MoltenVK route.
+- The Android renderer is a substantial Vulkan 1.1 renderer with dynamic-rendering and timeline-semaphore paths, Dear ImGui's Vulkan backend, and glslang HLSL-to-SPIR-V compilation. Source audit recommends testing MoltenVK on iOS before attempting a full native Metal rewrite; this is not integrated yet.
 
 ## Implemented on this branch
 
@@ -18,7 +18,7 @@ The Android port remains the reference implementation. iOS work is isolated on t
 - `ios/CMakeLists.txt`: standalone iOS CMake target linking SDL3 static.
 - `ios/src/main.cpp`: minimal SDL3 app host with a non-zero fullscreen landscape window, a Metal renderer preference, event loop and renderer diagnostic screen.
 - `ios/Info.plist`: app bundle metadata and landscape orientation.
-- `ios/README.md`: current architecture and next tasks.
+- `ios/README.md`: current architecture and next tasks.\n- `ios/ANDROID_PORTING_AUDIT.md`: verified Android host/rendering dependencies and a staged MoltenVK-first iOS plan.
 
 ## Current milestone
 
