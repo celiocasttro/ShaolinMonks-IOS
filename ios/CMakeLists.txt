@@ -12,7 +12,7 @@ if(NOT DEFINED SDL_SOURCE_DIR OR NOT EXISTS "${SDL_SOURCE_DIR}/CMakeLists.txt")
 endif()
 
 # Optional private original XBE used to build the recompiled game. Never commit it.
-set(IOS_XBE_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/../../assets/default.xbe" CACHE FILEPATH
+set(IOS_XBE_IMAGE "${CMAKE_CURRENT_SOURCE_DIR}/../assets/default.xbe" CACHE FILEPATH
     "Private original default.xbe used to identify the exact game release")
 set(IOS_EXPECTED_XBE_SHA1 "")
 if(EXISTS "${IOS_XBE_IMAGE}")
