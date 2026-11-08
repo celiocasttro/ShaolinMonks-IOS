@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 3.24)
+project(ShaolinMonksIOSHost LANGUAGES C CXX OBJC)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
+  message(FATAL_ERROR "This host must be configured with -DCMAKE_SYSTEM_NAME=iOS")
+endif()
+if(NOT DEFINED SDL_SOURCE_DIR OR NOT EXISTS "${SDL_SOURCE_DIR}/CMakeLists.txt")
+  message(FATAL_ERROR "Pass -DSDL_SOURCE_DIR=/path/to/SDL3")
+endif()
+
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory("${SDL_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/SDL3" EXCLUDE_FROM_ALL)
+
+add_executable(ShaolinMonksIOS MACOSX_BUNDLE
+  src/main.cpp
+)
+target_link_libraries(ShaolinMonksIOS PRIVATE SDL3-static)
+target_include_directories(ShaolinMonksIOS PRIVATE "${SDL_SOURCE_DIR}/include")
+target_compile_definitions(ShaolinMonksIOS PRIVATE SDL_MAIN_HANDLED=0)
+
+set_target_properties(ShaolinMonksIOS PROPERTIES
+  MACOSX_BUNDLE TRUE
+  MACOSX_BUNDLE_GUI_IDENTIFIER "com.celiocasttro.shaolinmonks"
+  MACOSX_BUNDLE_BUNDLE_NAME "Shaolin Monks"
+  MACOSX_BUNDLE_BUNDLE_VERSION "1"
+  MACOSX_BUNDLE_SHORT_VERSION_STRING "0.1.0"
+  XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.celiocasttro.shaolinmonks"
+  XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+  XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "15.0"
+  XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO"
+)
