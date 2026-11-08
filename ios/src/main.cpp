@@ -58,7 +58,10 @@ int main(int, char**) {
             static_cast<unsigned long long>(candidate.size), candidate.sha1.empty() ? "" : ", SHA-1 ",
             candidate.sha1.c_str());
         if (candidate.type == "ISO") SDL_Log("ISO Xbox filesystem: %s", candidate.containsXbe ? "valid; default.xbe found" : "not recognized or no default.xbe");
-        if (candidate.type == "XBE" || candidate.containsXbe) {\n            if (!candidate.releaseCheckAvailable) SDL_Log("XBE release check unavailable (expected hash not configured or read failed)");\n            else SDL_Log("XBE release match: %s", candidate.releaseMatches ? "YES" : "NO");\n        }
+        if (candidate.type == "XBE" || candidate.containsXbe) {
+            if (!candidate.releaseCheckAvailable) SDL_Log("XBE release check unavailable (expected hash not configured or read failed)");
+            else SDL_Log("XBE release match: %s", candidate.releaseMatches ? "YES" : "NO");
+        }
     }
 
     bool running = true;
