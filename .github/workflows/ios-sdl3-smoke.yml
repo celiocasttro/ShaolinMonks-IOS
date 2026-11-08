@@ -1,0 +1,70 @@
+name: iOS SDL3 device build smoke test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-port]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-sdl3-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  sdl3-iphoneos:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out port repository
+        uses: actions/checkout@v4
+
+      - name: Check out SDL3
+        uses: actions/checkout@v4
+        with:
+          repository: libsdl-org/SDL
+          ref: release-3.2.x
+          path: third_party/SDL3
+
+      - name: Show Apple toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          cmake --version
+
+      - name: Configure SDL3 for physical iPhone/iPad
+        run: |
+          cmake -S third_party/SDL3 -B build/SDL3-iphoneos -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 \
+            -DSDL_SHARED=OFF \
+            -DSDL_STATIC=ON \
+            -DSDL_TESTS=OFF \
+            -DSDL_EXAMPLES=OFF
+
+      - name: Build SDL3 for iOS device
+        run: cmake --build build/SDL3-iphoneos --config Release
+
+      - name: Record smoke-test result
+        if: always()
+        run: |
+          mkdir -p audit
+          {
+            echo "# SDL3 iOS device smoke test"
+            echo
+            echo "- Workflow: $GITHUB_WORKFLOW"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Runner: $RUNNER_OS / $RUNNER_ARCH"
+            echo "- Target: iOS device, arm64, deployment target iOS 15.0"
+            echo "- Result: see the preceding configure/build steps."
+          } > audit/sdl3-ios-smoke-test.md
+
+      - name: Upload smoke-test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl3-ios-smoke-test
+          path: audit/sdl3-ios-smoke-test.md
+          if-no-files-found: warn
