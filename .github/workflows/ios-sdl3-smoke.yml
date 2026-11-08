@@ -35,12 +35,7 @@ jobs:
 
       - name: Configure iPhone device target
         run: |
-          cmake -S ios -B build/ios-device -G Xcode \\
-            -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" \\
-            -DCMAKE_SYSTEM_NAME=iOS \\
-            -DCMAKE_OSX_SYSROOT=iphoneos \\
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \\
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
+          cmake -S ios -B build/ios-device -G Xcode -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphoneos -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
 
       - name: Build unsigned iPhone app
         run: cmake --build build/ios-device --config Release --target ShaolinMonksIOS
@@ -54,12 +49,7 @@ jobs:
 
       - name: Configure iOS simulator target
         run: |
-          cmake -S ios -B build/ios-simulator -G Xcode \\
-            -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" \\
-            -DCMAKE_SYSTEM_NAME=iOS \\
-            -DCMAKE_OSX_SYSROOT=iphonesimulator \\
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \\
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
+          cmake -S ios -B build/ios-simulator -G Xcode -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
 
       - name: Build iOS simulator app
         run: cmake --build build/ios-simulator --config Release --target ShaolinMonksIOS
