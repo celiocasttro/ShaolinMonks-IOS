@@ -112,9 +112,17 @@ std::vector<CandidateInfo> InspectCandidates() {
             if (ec) { ec.clear(); item.size = 0; }
             if (item.type == "XBE") {
                 item.sha1 = Sha1File(it->path());
-                item.releaseCheckAvailable = !expected.empty() && !item.sha1.empty();
-                item.releaseMatches = item.releaseCheckAvailable && item.sha1 == expected;
+            } else if (item.type == "ISO") {
+                kernel::Disc disc;
+                std::string error;
+                std::vector<uint8_t> embeddedXbe;
+                if (disc.Open(it->path(), error) && disc.Load("default.xbe", embeddedXbe)) {
+                    item.containsXbe = true;
+                    item.sha1 = Sha1Bytes(embeddedXbe);
+                }
             }
+            item.releaseCheckAvailable = !expected.empty() && !item.sha1.empty();
+            item.releaseMatches = item.releaseCheckAvailable && item.sha1 == expected;
             found.push_back(std::move(item));
         }
     }
