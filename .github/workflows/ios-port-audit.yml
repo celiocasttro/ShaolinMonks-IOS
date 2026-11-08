@@ -1,0 +1,59 @@
+name: iOS port readiness audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-port]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-port-audit.yml'
+      - 'CMakeLists.txt'
+      - 'native/**'
+      - 'src/**'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Inspect Apple toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphonesimulator --show-sdk-version
+          cmake --version
+      - name: Create port readiness report
+        shell: bash
+        run: |
+          mkdir -p audit
+          {
+            echo '# iOS port readiness'
+            echo
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Runner: $RUNNER_OS / $RUNNER_ARCH"
+            echo "- Xcode: $(xcodebuild -version | tr '\n' ' ')"
+            echo
+            echo '## iOS project files'
+            if find . -maxdepth 4 \( -name '*.xcodeproj' -o -name '*.xcworkspace' -o -name 'Package.swift' \) -print | grep .; then true; else echo 'No Xcode project/workspace or Swift package exists yet.'; fi
+            echo
+            echo '## Platform-specific CMake links'
+            grep -nE 'vulkan|android|log|SDL3|add_library\(main' CMakeLists.txt || true
+            echo
+            echo '## Native source inventory'
+            find native -maxdepth 2 -type f 2>/dev/null | sort || true
+            echo
+            echo '## Required next work'
+            echo 'Create the iOS host, isolate Android sources, and port the renderer/recompiler before enabling an IPA build.'
+          } > audit/ios-port-readiness.md
+          cat audit/ios-port-readiness.md
+      - name: Upload readiness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-port-readiness
+          path: audit/ios-port-readiness.md
+          if-no-files-found: error
