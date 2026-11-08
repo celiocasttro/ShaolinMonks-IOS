@@ -12,9 +12,9 @@ permissions:
   contents: read
 
 jobs:
-  ios-device-build:
+  ios-build:
     runs-on: macos-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Check out port repository
         uses: actions/checkout@v4
@@ -30,23 +30,36 @@ jobs:
         run: |
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphonesimulator --show-sdk-version
           cmake --version
 
-      - name: Configure native iOS app
+      - name: Configure iPhone device target
         run: |
-          cmake -S ios -B build/ios-device -G Xcode \
-            -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" \
-            -DCMAKE_SYSTEM_NAME=iOS \
-            -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+          cmake -S ios -B build/ios-device -G Xcode \\
+            -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" \\
+            -DCMAKE_SYSTEM_NAME=iOS \\
+            -DCMAKE_OSX_SYSROOT=iphoneos \\
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \\
             -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
 
-      - name: Build unsigned iOS app
+      - name: Build unsigned iPhone app
         run: cmake --build build/ios-device --config Release --target ShaolinMonksIOS
 
-      - name: Upload unsigned app bundle
+      - name: Upload unsigned iPhone app
         uses: actions/upload-artifact@v4
         with:
           name: ShaolinMonksIOS-unsigned-app
           path: build/ios-device/Release-iphoneos/ShaolinMonksIOS.app
           if-no-files-found: error
+
+      - name: Configure iOS simulator target
+        run: |
+          cmake -S ios -B build/ios-simulator -G Xcode \\
+            -DSDL_SOURCE_DIR="$GITHUB_WORKSPACE/third_party/SDL3" \\
+            -DCMAKE_SYSTEM_NAME=iOS \\
+            -DCMAKE_OSX_SYSROOT=iphonesimulator \\
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \\
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0
+
+      - name: Build iOS simulator app
+        run: cmake --build build/ios-simulator --config Release --target ShaolinMonksIOS
